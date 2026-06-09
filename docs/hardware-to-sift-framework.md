@@ -102,7 +102,7 @@ There are two SDK generations live in the Python package, and the public docs cu
 
 Guidance for the tutorial:
 - Target `sift_client` for longevity. Show `sift_py` only as the currently-documented fallback.
-- Pin the dependency so a fresh install does not silently break: `sift-stack-py>=0.17,<1.0` keeps `sift_py` available while the port is pending.
+- Pin the dependency so a fresh install does not silently break: `sift-stack-py>=0.17,<1.0` keeps `sift_py` available while remaining labs are migrated. Lab 01 already includes the `sift_client` port (`stream_attitude_sift_client.py`).
 - State explicitly that Sift's published examples lag the SDK, so verify against the installed version, not the docs.
 
 ## 6. Hands-on labs (shared template)
@@ -170,7 +170,7 @@ Richer than a single step. Cover:
 ## Open items
 
 1. Empirical end-to-end run still pending: needs a connected environment plus a running SITL to land real data.
-2. Port the streaming smoke test from `sift_py` to `sift_client`.
+2. Done: streaming smoke test ported to `sift_client` (lab 01, `stream_attitude_sift_client.py`). Live end-to-end run still pending per item 1.
 3. Build or locate a reference example for schemaless JSON over REST and for Influx line protocol.
 4. Confirm whether MCAP, uLog, MDF, or ROS have any supported non-import path before mentioning them at all.
 
