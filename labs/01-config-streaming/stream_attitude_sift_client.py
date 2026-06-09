@@ -3,30 +3,29 @@
 SITL -> Sift smoke test, sift_client edition.
 
 Same goal as sitl_to_sift_smoketest.py, ported to the supported `sift_client`
-module. The original uses `sift_py`, which is deprecated and removed at v1.0.0.
-This streams PX4 / ArduPilot SITL attitude telemetry into Sift via
+module. Streams PX4 / ArduPilot SITL attitude telemetry into Sift via
 ingestion-config-based streaming over gRPC.
 
     SITL flight stack --(MAVLink / UDP)--> this script --(gRPC)--> Sift
 
-Validation status (against sift-stack-py 0.17.0):
-    Validated offline: all imports resolve; the streaming API
-    (create_ingestion_config_streaming_client, send, finish) are coroutines;
-    and IngestionConfigCreate, FlowConfig, ChannelConfig, ChannelValue, and Flow
-    all construct correctly.
-    Not yet validated: the live connection. On the first real run, confirm the
-    client and event-loop interaction (see the note in main()).
+Two SDK facts this script follows (verified against sift-stack-py 0.17.0):
+  - Ingestion is async-only and lives on `client.async_.ingestion`, not
+    `client.ingestion`.
+  - SiftClient runs its own background event loop, so the coroutine is driven
+    with run_coroutine_threadsafe onto `client.get_asyncio_loop()` rather than
+    asyncio.run. The blocking MAVLink read is offloaded to an executor so it does
+    not stall that loop.
+
+Validation status: imports, the async ingestion accessor, the client loop, and
+config/flow/value construction are validated offline. The live stream is the
+end-to-end check.
 
 Setup:
     pip install "sift-stack-py>=0.17" pymavlink
-
-    Start SITL, for example:
-        ArduPilot:  sim_vehicle.py -v ArduCopter --out=udp:127.0.0.1:14550
-        PX4:        make px4_sitl jmavsim        (telemetry on udp:127.0.0.1:14540)
-
+    # Start SITL, e.g. ArduPilot: sim_vehicle.py -v ArduCopter --out=udp:127.0.0.1:14550
     export SIFT_API_KEY=...
-    export SIFT_GRPC_URL=...     # gRPC endpoint for your environment
-    export SIFT_REST_URL=...     # REST endpoint (optional)
+    export SIFT_GRPC_URL=...
+    export SIFT_REST_URL=...
     export MAVLINK_ENDPOINT=udp:127.0.0.1:14550   # optional, default shown
 """
 
@@ -54,11 +53,6 @@ MAVLINK_ENDPOINT = os.getenv("MAVLINK_ENDPOINT", "udp:127.0.0.1:14550")
 
 
 def build_config() -> IngestionConfigCreate:
-    """One flow, three attitude channels.
-
-    Channel order here is the contract: the ChannelValue list in each Flow must
-    name these same channels.
-    """
     return IngestionConfigCreate(
         asset_name=ASSET_NAME,
         client_key=CONFIG_KEY,
@@ -76,7 +70,6 @@ def build_config() -> IngestionConfigCreate:
 
 
 def connect_sitl():
-    """Connect to the SITL MAVLink stream and wait for a heartbeat."""
     print(f"Connecting to SITL at {MAVLINK_ENDPOINT} ...")
     mav = mavutil.mavlink_connection(MAVLINK_ENDPOINT)
     mav.wait_heartbeat()
@@ -84,29 +77,20 @@ def connect_sitl():
     return mav
 
 
-async def main() -> None:
-    api_key = os.environ["SIFT_API_KEY"]
-    grpc_url = os.environ["SIFT_GRPC_URL"]
-    rest_url = os.environ.get("SIFT_REST_URL")
-
-    mav = connect_sitl()
-
-    # NOTE: sift_client is async-first and manages its own event loop. If creating
-    # the client inside this running loop conflicts on your version, construct it
-    # before asyncio.run() and pass it in, or use the client's loop helpers.
-    client = SiftClient(api_key=api_key, grpc_url=grpc_url, rest_url=rest_url)
-
-    streaming = await client.ingestion.create_ingestion_config_streaming_client(
+async def stream(client: SiftClient, mav) -> None:
+    streaming = await client.async_.ingestion.create_ingestion_config_streaming_client(
         build_config(),
         streaming_mode=StreamingMode.LIVE_ONLY,
     )
     print("Ingestion config registered. Streaming attitude. Ctrl-C to stop.")
-
-    # recv_match is a blocking read; fine here since send is the only other work.
+    loop = asyncio.get_running_loop()
     sent = 0
     try:
         while True:
-            msg = mav.recv_match(type="ATTITUDE", blocking=True, timeout=5)
+            # recv_match blocks, so run it off the event loop
+            msg = await loop.run_in_executor(
+                None, lambda: mav.recv_match(type="ATTITUDE", blocking=True, timeout=5)
+            )
             if msg is None:
                 continue
             await streaming.send(Flow(
@@ -124,5 +108,16 @@ async def main() -> None:
         await streaming.finish()
 
 
+def main() -> None:
+    mav = connect_sitl()
+    client = SiftClient(
+        api_key=os.environ["SIFT_API_KEY"],
+        grpc_url=os.environ["SIFT_GRPC_URL"],
+        rest_url=os.environ.get("SIFT_REST_URL"),
+    )
+    future = asyncio.run_coroutine_threadsafe(stream(client, mav), client.get_asyncio_loop())
+    future.result()
+
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
