@@ -1,0 +1,4 @@
+# Pinned below v1.0 so the deprecated sift_py module stays available
+# until the labs are ported to sift_client. See docs/hardware-to-sift-framework.md, Section 5.
+sift-stack-py>=0.17,<1.0
+pymavlink

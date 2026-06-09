@@ -1,0 +1,25 @@
+# Secrets - never commit these
+.env
+.env.*
+*.key
+*.pem
+credentials.json
+*_secret*
+
+# Local scratch and raw telemetry dumps
+data/
+asset_list.txt
+*.ulg
+*.mcap
+*.tdms
+*.h5
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# OS
+.DS_Store
