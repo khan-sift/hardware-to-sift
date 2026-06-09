@@ -169,7 +169,7 @@ Richer than a single step. Cover:
 
 ## Open items
 
-1. Empirical end-to-end run still pending: needs a connected environment plus a running SITL to land real data.
+1. Empirical end-to-end run: closed. On 2026-06-09 the synthetic streamer (`smoke_synthetic.py`) streamed live into the dev environment, and the `sine.value` channel on the `synthetic-smoke` asset renders the expected clean sine in the Sift UI. This confirms credentials, the dev-env URL, and the full ingestion pipeline through the `sift_py` config-based path. The dotted channel name appeared as the `sine` group with a `value` leaf, confirming the naming convention the labs rely on. Still outstanding: live confirmation for the `sift_client` async path (labs 01/03/04) and the raw-gRPC protobuf path (lab 02).
 2. Done: streaming smoke test ported to `sift_client` (lab 01, `stream_attitude_sift_client.py`). Live end-to-end run still pending per item 1.
 3. Build or locate a reference example for schemaless JSON over REST and for Influx line protocol.
 4. Confirm whether MCAP, uLog, MDF, or ROS have any supported non-import path before mentioning them at all.
