@@ -54,7 +54,7 @@ Sift exposes five ingestion mechanisms. Promote these to the backbone of the tut
 | Mechanism | Transport | Status | Notes |
 |---|---|---|---|
 | Config-based streaming | gRPC | Confirmed, primary | Define a schema, stream structured messages. Lead with this. |
-| Protobuf streaming | gRPC | Confirmed, in use | Stream arbitrary protocol buffers. Real, not theoretical. |
+| Protobuf streaming | gRPC | Confirmed, in use | Stream arbitrary protocol buffers. Raw gRPC only, no high-level client wrapper. Schema registered out-of-band (unverified). See lab 02. |
 | Data import | file or URL | Confirmed, in use | Batch upload of recorded files. See format table. |
 | Schemaless JSON | REST | Doc-only | Send JSON without pre-registering a config. No in-house example found. |
 | Influx line protocol | Influx client | Doc-only | Stream via any Influx client. No in-house example found. |

@@ -1,0 +1,9 @@
+syntax = "proto3";
+package drone.v1;
+
+message DroneState {
+  double roll = 1;
+  double pitch = 2;
+  double yaw = 3;
+  double battery_v = 4;
+}
