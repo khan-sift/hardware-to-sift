@@ -14,7 +14,7 @@ A tutorial and a set of runnable labs that trace telemetry from a physical senso
 |---|---|---|
 | 01 | Config-based streaming | Built (sift_py + sift_client), live-validated end to end |
 | 02 | Protobuf streaming | Built and live-validated (schema registration + arbitrary protobuf) |
-| 03 | Data import (CSV, then Parquet) | Built and offline-validated |
+| 03 | Data import (CSV, then Parquet) | Built and live-validated (both jobs succeeded) |
 | 04 | CAN / DBC | Built and offline-validated |
 | 05 | Schemaless JSON over REST and Influx | To do (no in-house reference yet) |
 

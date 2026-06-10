@@ -24,4 +24,14 @@ python import_csv_and_parquet.py
 6. Failure modes: unsupported or empty timestamps, wrong CSV column numbering, non-flat Parquet.
 
 ## Validation status
-Offline-validated against sift-stack-py 0.17.0: imports, sample generation, explicit config construction, and the import method signature. The live upload is the first real end-to-end check.
+Live-confirmed on 2026-06-09 against the dev environment. Both files imported into
+the `drone-import-demo` asset as separate runs (`csv-import-demo`,
+`parquet-import-demo`), both jobs reported `SUCCEEDED`, and each of the four
+channels (`attitude.roll`, `attitude.pitch`, `attitude.yaw`, `battery.voltage`,
+all double) carries the expected 50-point series, identical across the two paths.
+
+Two things the live run showed:
+- The explicit `units` ("rad", "V") propagate to the UI. The raw API references
+  each unit by an internal id, which the console resolves to the readable string.
+- Data is timestamped by file content (2026-01-01 here), not by upload time, so
+  imported history lands at its real time rather than "now".
