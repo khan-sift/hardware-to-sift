@@ -11,7 +11,7 @@ Two things the SDK forces here, both verified against sift-stack-py 0.17.0:
     which would bind the gRPC channel to a different loop.
 
 Setup (PowerShell):
-    pip install sift-stack-py
+    pip install "sift-stack-py[sift-stream]==0.17.0"   # [sift-stream] = native streaming bindings, required here
     $env:SIFT_API_KEY = "your-key"
     $env:SIFT_GRPC_URL = "https://grpc-api.development.siftstack.com"
     $env:SIFT_REST_URL = "https://api.development.siftstack.com"

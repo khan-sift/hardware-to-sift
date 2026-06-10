@@ -21,7 +21,7 @@ config/flow/value construction are validated offline. The live stream is the
 end-to-end check.
 
 Setup:
-    pip install "sift-stack-py>=0.17" pymavlink
+    pip install "sift-stack-py[sift-stream]==0.17.0" pymavlink
     # Start SITL, e.g. ArduPilot: sim_vehicle.py -v ArduCopter --out=udp:127.0.0.1:14550
     export SIFT_API_KEY=...
     export SIFT_GRPC_URL=...

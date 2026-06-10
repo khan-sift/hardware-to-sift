@@ -102,7 +102,8 @@ There are two SDK generations live in the Python package, and the public docs cu
 
 Guidance for the tutorial:
 - Target `sift_client` for longevity. Show `sift_py` only as the currently-documented fallback.
-- Pin the dependency so a fresh install does not silently break: `sift-stack-py>=0.17,<1.0` keeps `sift_py` available while remaining labs are migrated. Lab 01 already includes the `sift_client` port (`stream_attitude_sift_client.py`).
+- Pin the dependency exactly. The labs are validated against `sift-stack-py==0.17.0`; a bare `pip install` pulls a newer 0.x whose API has already drifted (for example, `StreamingMode` is no longer re-exported from `sift_client.resources`). Pinning below v1.0 also keeps `sift_py` available while the remaining labs migrate.
+- `sift_client` streaming requires the `[sift-stream]` extra, which pulls the native `sift_stream_bindings` (Rust). The legacy `sift_py` path streams over pure-Python gRPC and needs no extra. Install `sift-stack-py[sift-stream]==0.17.0`; prebuilt wheels exist for common platforms including Windows. Lab 01 includes both `sift_client` scripts (a no-hardware synthetic test and a SITL test), live-confirmed.
 - State explicitly that Sift's published examples lag the SDK, so verify against the installed version, not the docs.
 
 ## 6. Hands-on labs (shared template)
@@ -169,8 +170,8 @@ Richer than a single step. Cover:
 
 ## Open items
 
-1. Empirical end-to-end run: closed. On 2026-06-09 the synthetic streamer (`smoke_synthetic.py`) streamed live into the dev environment, and the `sine.value` channel on the `synthetic-smoke` asset renders the expected clean sine in the Sift UI. This confirms credentials, the dev-env URL, and the full ingestion pipeline through the `sift_py` config-based path. The dotted channel name appeared as the `sine` group with a `value` leaf, confirming the naming convention the labs rely on. Still outstanding: live confirmation for the `sift_client` async path (labs 01/03/04) and the raw-gRPC protobuf path (lab 02).
-2. Done: streaming smoke test ported to `sift_client` (lab 01, `stream_attitude_sift_client.py`). Live end-to-end run still pending per item 1.
+1. Empirical end-to-end run: closed. On 2026-06-09 the synthetic streamer (`smoke_synthetic.py`) streamed live into the dev environment, and the `sine.value` channel on the `synthetic-smoke` asset renders the expected clean sine in the Sift UI. This confirms credentials, the dev-env URL, and the full ingestion pipeline through the `sift_py` config-based path. The dotted channel name appeared as the `sine` group with a `value` leaf, confirming the naming convention the labs rely on. The `sift_client` async path is now also live-confirmed (2026-06-09, the `synthetic-smoke-sift-client` asset renders the same sine via the native `sift_stream` bindings), so both ingestion clients are validated end to end. Still outstanding: the raw-gRPC protobuf path (lab 02).
+2. Done: streaming smoke test ported to `sift_client` (lab 01), live end-to-end run confirmed 2026-06-09 against the dev environment (`synthetic-smoke-sift-client`). The port also surfaced and fixed two real issues only a live run exposes: ingestion is on `client.async_.ingestion` (not `client.ingestion`), and it requires the `[sift-stream]` native bindings extra.
 3. Build or locate a reference example for schemaless JSON over REST and for Influx line protocol.
 4. Confirm whether MCAP, uLog, MDF, or ROS have any supported non-import path before mentioning them at all.
 

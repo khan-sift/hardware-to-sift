@@ -23,3 +23,6 @@ venv/
 
 # OS
 .DS_Store
+
+# Native sift_stream runtime logs
+logs/
