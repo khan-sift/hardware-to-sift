@@ -6,11 +6,11 @@ Mechanism: config-based streaming with a CAN/DBC decode step in front. Raw CAN f
 `decode_can_and_stream.py` writes a small sample DBC and synthesizes frames, so it runs with no bus or hardware. Point it at a real DBC and CAN log to go live.
 
 ## Run
-```bash
-pip install "sift-stack-py>=0.17" cantools
-export SIFT_API_KEY=...
-export SIFT_GRPC_URL=...
-export SIFT_REST_URL=...        # optional
+```powershell
+pip install "sift-stack-py[sift-stream]==0.17.0" cantools
+$env:SIFT_API_KEY  = "your-key"
+$env:SIFT_GRPC_URL = "https://grpc-api.development.siftstack.com"
+$env:SIFT_REST_URL = "https://api.development.siftstack.com"
 python decode_can_and_stream.py
 ```
 

@@ -12,16 +12,21 @@ you would also use for DroneCAN / UAVCAN on the capstone drone.
 Self-contained: it writes a small sample DBC and synthesizes frames, so no bus
 or hardware is needed. Point it at a real DBC and a real CAN log to go live.
 
+Two SDK facts this follows (same as lab 01, verified against sift-stack-py 0.17.0):
+  - Ingestion is async-only and lives on `client.async_.ingestion`.
+  - SiftClient runs its own background loop, so the coroutine is driven with
+    run_coroutine_threadsafe onto `client.get_asyncio_loop()`, not asyncio.run.
+
 Validation status (against sift-stack-py 0.17.0 and cantools):
     Validated offline: the sample DBC loads; encode/decode round-trips; the
-    per-message ingestion config builds; and ChannelValue / Flow construct.
-    Not yet validated: the live stream. The first real run is the end-to-end check.
+    per-message ingestion config builds; ChannelValue / Flow construct; and the
+    call uses the correct async accessor. The live stream is the end-to-end check.
 
 Setup:
-    pip install "sift-stack-py>=0.17" cantools
-    export SIFT_API_KEY=...
-    export SIFT_GRPC_URL=...
-    export SIFT_REST_URL=...        # optional
+    pip install "sift-stack-py[sift-stream]==0.17.0" cantools
+    $env:SIFT_API_KEY  = "your-key"
+    $env:SIFT_GRPC_URL = "https://grpc-api.development.siftstack.com"
+    $env:SIFT_REST_URL = "https://api.development.siftstack.com"
 Run:
     python decode_can_and_stream.py
 """
@@ -103,20 +108,12 @@ def synthesize(msg_name: str, i: int) -> dict:
     return {}
 
 
-async def main() -> None:
-    api_key = os.environ["SIFT_API_KEY"]
-    grpc_url = os.environ["SIFT_GRPC_URL"]
-    rest_url = os.environ.get("SIFT_REST_URL")
-
-    db = load_dbc()
-    client = SiftClient(api_key=api_key, grpc_url=grpc_url, rest_url=rest_url)
-
-    streaming = await client.ingestion.create_ingestion_config_streaming_client(
+async def stream(client: SiftClient, db) -> None:
+    streaming = await client.async_.ingestion.create_ingestion_config_streaming_client(
         build_config(db),
         streaming_mode=StreamingMode.LIVE_ONLY,
     )
     print("Ingestion config registered. Streaming decoded CAN. Ctrl-C to stop.")
-
     try:
         for i in range(200):
             for msg in db.messages:
@@ -136,11 +133,25 @@ async def main() -> None:
                         for sig in msg.signals
                     ],
                 ))
+            if (i + 1) % 40 == 0:
+                print(f"[{i + 1}] ticks streamed")
             await asyncio.sleep(0.05)
         print("Done streaming 200 ticks per message.")
     finally:
         await streaming.finish()
 
 
+def main() -> None:
+    client = SiftClient(
+        api_key=os.environ["SIFT_API_KEY"],
+        grpc_url=os.environ["SIFT_GRPC_URL"],
+        rest_url=os.environ.get("SIFT_REST_URL"),
+    )
+    db = load_dbc()
+    # Ingestion is async-only; run it on the client's own loop.
+    future = asyncio.run_coroutine_threadsafe(stream(client, db), client.get_asyncio_loop())
+    future.result()
+
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
