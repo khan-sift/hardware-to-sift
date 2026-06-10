@@ -23,4 +23,10 @@ python decode_can_and_stream.py
 6. Failure modes: values outside the DBC's declared range, channel names not matching the config, and enum signals (DBC value tables) that need ENUM rather than DOUBLE.
 
 ## Validation status
-Offline-validated against sift-stack-py 0.17.0 and cantools: DBC load, encode/decode round-trip, config build, and value construction. The live stream is the first real end-to-end check.
+Live-confirmed on 2026-06-09 against the dev environment. The `can-bus-demo` asset
+came up with four channels, namespaced by CAN message and all double:
+`MOTOR_STATUS.speed_kph` (kph), `MOTOR_STATUS.motor_temp` (degC),
+`BATT_STATUS.BATT_Voltage` (V), `BATT_STATUS.BATT_Current` (A), each carrying the
+streamed 200-point burst. The units came straight from the DBC and resolved
+correctly in the UI, and the frames were exercised through a real cantools
+encode/decode round-trip, not passed through.
