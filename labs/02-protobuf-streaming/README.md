@@ -55,7 +55,15 @@ raw protobuf path has no `sift_client` equivalent.
 - Missing or non-UTC timestamp.
 
 ## Validation status
-Offline-validated: the proto compiles, the `FileDescriptorSet` builds, both the
-registration request and the stream request build, and both stubs plus the
-channel helper import. The live run confirms the registration is accepted and
-the fields land as channels.
+Live-confirmed on 2026-06-09 against the dev environment. The `AddProtobufDescriptor`
+registration was accepted and the `protobuf-smoke` asset came up with four channels
+auto-mapped from the message fields, namespaced under the message type:
+`DroneState.roll`, `DroneState.pitch`, `DroneState.yaw`, `DroneState.battery_v`,
+all double, each carrying the streamed burst.
+
+Two things the live run showed:
+- Channels namespace as `MessageType.field`, the same group-and-leaf shape as the
+  dotted channel names in lab 01.
+- Without a `(units)` annotation, units render as an internal placeholder rather
+  than a human-readable string. Annotate the fields in `drone_state.proto` to fix
+  it; that is the natural follow-up enhancement.
