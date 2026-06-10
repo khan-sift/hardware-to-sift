@@ -8,18 +8,20 @@ confirmed formats. Unlike streaming, this path is synchronous.
     recorded file (CSV / Parquet) --(REST upload)--> Sift  -> a Run you can open
 
 Validation status (against sift-stack-py 0.17.0):
-    Validated offline: imports resolve; the sample-data generator runs and writes
-    valid CSV and Parquet; DataTypeKey and TimeFormat values are real; and the
-    explicit CsvImportConfig / ParquetFlatDatasetImportConfig objects construct.
-    Not yet validated: the live upload. The first real run is the end-to-end check.
+    Validated offline: imports resolve; the sample-data generator writes valid
+    CSV and Parquet; DataTypeKey and TimeFormat values are real; the explicit
+    CsvImportConfig / ParquetFlatDatasetImportConfig objects construct; and the
+    call uses the correct synchronous accessor, client.data_import (singular).
+    Column numbers are 1-indexed, matching the SDK's first_data_row convention.
+    The live upload is the end-to-end check.
 
 Setup:
-    pip install "sift-stack-py>=0.17"
+    pip install "sift-stack-py==0.17.0"
     pip install pandas pyarrow      # only needed to regenerate the sample files
 
-    export SIFT_API_KEY=...
-    export SIFT_GRPC_URL=...
-    export SIFT_REST_URL=...        # data import uses the REST endpoint
+    $env:SIFT_API_KEY  = "your-key"
+    $env:SIFT_GRPC_URL = "https://grpc-api.development.siftstack.com"
+    $env:SIFT_REST_URL = "https://api.development.siftstack.com"   # import uses REST
 
 Run:
     python import_csv_and_parquet.py
@@ -127,13 +129,13 @@ def main() -> None:
     client = SiftClient(api_key=api_key, grpc_url=grpc_url, rest_url=rest_url)
 
     # Explicit-config imports. Simpler alternative: omit config and let Sift
-    # detect it, e.g. client.data_imports.import_from_path(
+    # detect it, e.g. client.data_import.import_from_path(
     #     CSV_PATH, asset=ASSET_NAME, data_type=DataTypeKey.CSV,
     #     time_format=TimeFormat.ABSOLUTE_RFC3339, run_name="csv-import-demo")
-    csv_job = client.data_imports.import_from_path(CSV_PATH, config=build_csv_config(), show_progress=True)
+    csv_job = client.data_import.import_from_path(CSV_PATH, config=build_csv_config(), show_progress=True)
     print(f"CSV import job: {csv_job}")
 
-    parquet_job = client.data_imports.import_from_path(PARQUET_PATH, config=build_parquet_config(), show_progress=True)
+    parquet_job = client.data_import.import_from_path(PARQUET_PATH, config=build_parquet_config(), show_progress=True)
     print(f"Parquet import job: {parquet_job}")
 
 
